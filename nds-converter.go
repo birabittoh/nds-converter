@@ -30,6 +30,7 @@ func main() {
 	if err != nil {
 		MaxFileSize = DefaultMaxFileSize
 	}
+	println("Max file size:", MaxFileSize, "MB.")
 	MaxFileSize *= MB
 
 	AdditionalBytes, _ = hex.DecodeString(AdditionalBytesHex)

@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    image: ghcr.io/birabittoh/nds-converter:main
+    container_name: nds-converter
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    environment:
+      - PORT=3000
+      - MAX_SIZE_MB
