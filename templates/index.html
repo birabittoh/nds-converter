@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>NDS Converter</title>
+    <style>
+        body, a {
+            background-color: #212529;
+            color: #dee2e6;
+            font-family: sans-serif;
+        }
+        hr {
+            width: 400px;
+            text-align: left;
+            margin-left: 0px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>NDS Converter</h2>
+    <p>Please, select one or more <code>.sav</code> or <code>.dsv</code> files.</p>
+    <input type="file" accept=".dsv,.sav" multiple onchange="convertFiles(this)">
+    <hr>
+    <p><a href="https://github.com/BiRabittoh/nds-converter">Source code</a></p>
+
+    <script>
+        async function convertFiles(element) {
+            for (f of element.files) {
+                await convert(f);
+            }
+        }
+
+        async function convert(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                alert(`Error ${response.status}: ${await response.text()}`);
+                return;
+            }
+
+            const newExtension = file.name.endsWith('.dsv') ? '.sav' : '.dsv';
+
+            const blob = await response.blob();
+
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = file.name.replace(/\.[^.]+$/, '') + newExtension;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+
+</html>
