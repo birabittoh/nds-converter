@@ -30,9 +30,11 @@
 
     <script>
         async function convertFiles(element) {
+            element.disabled = true;
             for (f of element.files) {
                 await convert(f);
             }
+            element.disabled = false;
         }
 
         async function convert(file) {
