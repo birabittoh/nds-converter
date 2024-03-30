@@ -9,7 +9,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Transfer source code
-COPY templates ./templates
+COPY index.html ./index.html
 COPY *.go ./
 
 # Build
@@ -21,7 +21,7 @@ RUN go test -v ./...
 
 FROM scratch AS build-release-stage
 
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+#COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /dist /app
 
 WORKDIR /app

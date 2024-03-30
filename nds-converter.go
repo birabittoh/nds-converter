@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/hex"
+	_ "embed"
 	"net/http"
 	"os"
 	"strconv"
@@ -10,7 +10,16 @@ import (
 )
 
 const (
-	DefaultPort = "1111"
+	MB                 = 1 << 20
+	DefaultmaxFileSize = 2
+	DefaultPort        = "1111"
+)
+
+var (
+	//go:embed index.html
+	indexPage     []byte
+	maxFileSize   int64
+	maxFileSizeMB int64
 )
 
 func main() {
@@ -26,14 +35,12 @@ func main() {
 	}
 
 	fileSizeString := os.Getenv("MAX_SIZE_MB")
-	MaxFileSize, err = strconv.ParseInt(fileSizeString, 10, 64)
+	maxFileSize, err = strconv.ParseInt(fileSizeString, 10, 64)
 	if err != nil {
-		MaxFileSize = DefaultMaxFileSize
+		maxFileSize = DefaultmaxFileSize
 	}
-	println("Max file size:", MaxFileSize, "MB.")
-	MaxFileSize *= MB
-
-	AdditionalBytes, _ = hex.DecodeString(AdditionalBytesHex)
+	println("Max file size:", maxFileSize, "MB.")
+	maxFileSizeMB = maxFileSize * MB
 
 	http.HandleFunc("/", mainHandler)
 	println("Listening on port " + port)
@@ -48,6 +55,46 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		postHandler(w, r)
 	default:
-		http.Error(w, "Method not supported", http.StatusBadRequest)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+func getHandler(w http.ResponseWriter) {
+	w.Write(indexPage)
+}
+
+func postHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the multipart form data
+	err := r.ParseMultipartForm(maxFileSizeMB)
+	if err != nil {
+		http.Error(w, "Error parsing form", http.StatusBadRequest)
+		return
+	}
+
+	// Limit upload file size
+	r.Body = http.MaxBytesReader(w, r.Body, maxFileSizeMB)
+
+	// Get the file from the request
+	file, h, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Error retrieving file from form data", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Check file size
+	if h.Size > maxFileSizeMB {
+		http.Error(w, "File size exceeds "+strconv.FormatInt(maxFileSize, 10)+"MB", http.StatusBadRequest)
+		return
+	}
+
+	// Convert file
+	output, err := Convert(file, h)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Send response
+	w.Write(output)
 }
