@@ -8,10 +8,10 @@ First, you need a save file, either of the two formats will work.
 Then, you can just use `curl`:
 
 ```
-curl https://nds.birabittoh.duckdns.org/ -F file=@savefile.sav > savefile.dsv
+curl http://localhost:3000 -F file=@savefile.sav > savefile.dsv
 ```
 
 The conversion works both ways.
 ```
-curl https://nds.birabittoh.duckdns.org/ -F file=@savefile.dsv > savefile.sav
+curl http://localhost:3000 -F file=@savefile.dsv > savefile.sav
 ```
